@@ -42,6 +42,8 @@ interface ExpensesContextValue {
   addExpense: (expense: Omit<Expense, "id">) => void;
   removeExpense: (id: string) => void;
   setBudget: (category: ExpenseCategory, amount: number) => void;
+  income: number;
+  setIncome: (amount: number) => void;
   monthTotal: number;
   todayTotal: number;
   byCategory: Array<{ category: ExpenseCategory; total: number; color: string; budget: number }>;
@@ -86,6 +88,15 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
     }
   });
 
+  const [income, setIncome] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("north_income_v1");
+      return saved ? JSON.parse(saved) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem("north_expenses_v1", JSON.stringify(expenses));
   }, [expenses]);
@@ -93,6 +104,10 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem("north_budgets_v1", JSON.stringify(budgets));
   }, [budgets]);
+
+  useEffect(() => {
+    localStorage.setItem("north_income_v1", JSON.stringify(income));
+  }, [income]);
 
   const addExpense = (expense: Omit<Expense, "id">) => {
     setExpenses((prev) => [{ ...expense, id: crypto.randomUUID() }, ...prev]);
@@ -149,9 +164,11 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
       value={{
         expenses,
         budgets,
+        income,
         addExpense,
         removeExpense,
         setBudget,
+        setIncome,
         ...derived,
       }}
     >

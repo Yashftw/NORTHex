@@ -1,15 +1,17 @@
 import { motion } from "framer-motion";
-import { Wallet, Calendar, TrendingDown } from "lucide-react";
+import { Wallet, Calendar, TrendingDown, DollarSign } from "lucide-react";
 import { useExpenses } from "@/lib/expenses-context";
 import { useCurrency } from "@/lib/currency-context";
+import { Input } from "@/components/ui/input";
 
 export const ExpenseSummary = () => {
-  const { monthTotal, todayTotal, byCategory, expenses } = useExpenses();
+  const { monthTotal, todayTotal, byCategory, expenses, income, setIncome } = useExpenses();
   const { formatAmount } = useCurrency();
 
   const totalBudget = byCategory.reduce((s, c) => s + c.budget, 0);
-  const budgetPct = totalBudget > 0 ? (monthTotal / totalBudget) * 100 : 0;
-  const remaining = Math.max(totalBudget - monthTotal, 0);
+  const totalAvailable = income > 0 ? income : totalBudget;
+  const spentPct = totalAvailable > 0 ? (monthTotal / totalAvailable) * 100 : 0;
+  const remaining = Math.max(totalAvailable - monthTotal, 0);
 
   const currentMonth = new Date().toISOString().slice(0, 7);
   const monthExpenses = expenses.filter((e) => e.date.startsWith(currentMonth));
@@ -33,21 +35,41 @@ export const ExpenseSummary = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
         <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Total Income</p>
+          <div className="flex items-center">
+            <Input
+              type="number"
+              value={income || ""}
+              placeholder="0"
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                setIncome(isNaN(val) ? 0 : val);
+              }}
+              className="text-3xl md:text-4xl font-bold mono-font h-auto py-0 px-0 bg-transparent border-none focus-visible:ring-0 w-full shadow-none"
+            />
+          </div>
+          <div className="inline-flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+            <DollarSign className="h-4 w-4" />
+            Monthly Salary
+          </div>
+        </div>
+
+        <div className="md:border-l md:border-border md:pl-8">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Spent</p>
-          <p className="display-font text-5xl md:text-6xl text-foreground mono-font">
+          <p className="display-font text-4xl md:text-5xl text-foreground mono-font">
             {formatAmount(monthTotal, 0)}
           </p>
           <div className="mt-4 space-y-2">
             <div className="w-full h-px bg-border overflow-hidden">
               <div
                 className="h-full bg-gradient-primary transition-all duration-700"
-                style={{ width: `${Math.min(budgetPct, 100)}%` }}
+                style={{ width: `${Math.min(spentPct, 100)}%` }}
               />
             </div>
             <p className="text-xs text-muted-foreground mono-font">
-              {budgetPct.toFixed(1)}% of {formatAmount(totalBudget, 0)} budget
+              {spentPct.toFixed(1)}% of {formatAmount(totalAvailable, 0)} {income > 0 ? "income" : "budget"}
             </p>
           </div>
         </div>
