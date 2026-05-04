@@ -1,0 +1,136 @@
+import { useState } from "react";
+import { useDashboard, GoalCategory } from "@/lib/dashboard-context";
+import { Target, Plus, Trash2 } from "lucide-react";
+
+const CAT_COLORS: Record<GoalCategory, string> = {
+  health: "#39ff14", // green
+  finance: "#00e5ff", // cyan
+  personal: "#a855f7", // purple
+};
+
+export const GoalsHUD = () => {
+  const { goals, addGoal, incrementGoal, deleteGoal } = useDashboard();
+  const [newTitle, setNewTitle] = useState("");
+  const [newDeadline, setNewDeadline] = useState("");
+  const [newCat, setNewCat] = useState<GoalCategory>("personal");
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim() || !newDeadline) return;
+    addGoal(newTitle, newDeadline, newCat);
+    setNewTitle("");
+    setNewDeadline("");
+  };
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const sortedGoals = [...goals].sort((a, b) => {
+    // completed goes to bottom
+    if (a.completed !== b.completed) return a.completed ? 1 : -1;
+    return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+  });
+
+  const getStatusClasses = (deadline: string, completed: boolean) => {
+    if (completed) return "border-success/30 text-muted-foreground opacity-50";
+    const d = new Date(deadline);
+    d.setHours(0,0,0,0);
+    const diff = (d.getTime() - today.getTime()) / (1000 * 3600 * 24);
+    if (diff < 0) return "border-destructive text-destructive animate-pulse shadow-[0_0_10px_rgba(255,0,0,0.2)]";
+    if (diff <= 3) return "border-accent text-accent shadow-[0_0_10px_rgba(255,107,0,0.2)]";
+    return "border-primary/20 text-foreground";
+  };
+
+  return (
+    <div className="glass-card rounded-none p-6 relative group flex flex-col h-full">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="hud-badge w-10 h-10 border-success/50 text-success">
+          <Target className="w-5 h-5" />
+        </div>
+        <div>
+          <h2 className="text-xl text-success text-shadow-glow">SYS_OBJ_DIR</h2>
+          <p className="text-[10px] text-muted-foreground uppercase mono-font tracking-widest">Active Objectives</p>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto no-scrollbar space-y-3 mb-6 max-h-[300px] pr-2">
+        {sortedGoals.length === 0 ? (
+          <div className="h-full flex items-center justify-center border border-dashed border-primary/20">
+            <span className="mono-font text-xs text-primary/50 uppercase">No active objectives detected</span>
+          </div>
+        ) : (
+          sortedGoals.map((g) => (
+            <div key={g.id} className={`p-3 border bg-black/40 relative overflow-hidden group/goal transition-all ${getStatusClasses(g.deadline, g.completed)}`}>
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CAT_COLORS[g.category] }} />
+                    <span className="text-[10px] uppercase mono-font tracking-wider opacity-70">{g.category}</span>
+                  </div>
+                  <h3 className={`font-bold tracking-wide text-sm ${g.completed ? 'line-through' : ''}`}>{g.title}</h3>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="mono-font text-[10px] opacity-70">T-MINUS</span>
+                  <span className="mono-font text-xs font-bold">{g.deadline}</span>
+                </div>
+              </div>
+              
+              {/* Progress Bar */}
+              <div 
+                className="h-4 w-full bg-black/80 border border-primary/20 cursor-pointer relative overflow-hidden mt-3 group/bar"
+                onClick={() => incrementGoal(g.id, 25)}
+              >
+                <div 
+                  className="h-full transition-all duration-500 ease-out"
+                  style={{ width: `${g.progress}%`, backgroundColor: g.completed ? '#39ff14' : '#00e5ff' }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="mono-font text-[10px] font-bold mix-blend-difference text-white">{g.progress}%</span>
+                </div>
+                {/* Hover overlay hint */}
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/bar:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="mono-font text-[8px] text-white tracking-widest">+25%</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={(e) => { e.stopPropagation(); deleteGoal(g.id); }}
+                className="absolute top-2 right-2 p-1 opacity-0 group-hover/goal:opacity-100 text-destructive hover:bg-destructive/20 transition-all"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-auto">
+        <form onSubmit={handleAdd} className="flex gap-2">
+          <select 
+            value={newCat} 
+            onChange={e => setNewCat(e.target.value as GoalCategory)}
+            className="hud-input w-24 px-2 py-2 outline-none mono-font text-[10px] uppercase"
+          >
+            <option value="personal">PRS</option>
+            <option value="health">HLT</option>
+            <option value="finance">FIN</option>
+          </select>
+          <input
+            type="text"
+            placeholder="NEW DIRECTIVE"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-xs uppercase placeholder:text-primary/30"
+          />
+          <input
+            type="date"
+            value={newDeadline}
+            onChange={(e) => setNewDeadline(e.target.value)}
+            className="hud-input w-32 px-2 py-2 outline-none mono-font text-xs uppercase"
+          />
+          <button type="submit" className="hud-button px-3 py-2"><Plus className="w-4 h-4" /></button>
+        </form>
+      </div>
+    </div>
+  );
+};
