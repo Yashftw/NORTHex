@@ -35,28 +35,32 @@ export const ExpenseSummary = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Total Income</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 relative">
+        <div className="bg-background/40 p-4 rounded-lg border border-border/50">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3 flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-primary" />
+            Total Income
+          </p>
           <div className="flex items-center">
             <Input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={income || ""}
-              placeholder="0"
+              placeholder="Enter monthly pool..."
               onChange={(e) => {
                 const val = parseFloat(e.target.value);
                 setIncome(isNaN(val) ? 0 : val);
               }}
-              className="text-3xl md:text-4xl font-bold mono-font h-auto py-0 px-0 bg-transparent border-none focus-visible:ring-0 w-full shadow-none"
+              className="text-2xl md:text-3xl font-bold mono-font h-14 bg-background/50 border-2 border-border/50 hover:border-border focus-visible:border-primary focus-visible:ring-0 w-full shadow-sm rounded-md px-4 transition-colors"
             />
           </div>
-          <div className="inline-flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-            <DollarSign className="h-4 w-4" />
-            Monthly Salary
+          <div className="mt-3 text-xs text-muted-foreground/70 leading-relaxed">
+            Set this first to track how much of your monthly pool remains.
           </div>
         </div>
 
-        <div className="md:border-l md:border-border md:pl-8">
+        <div className="sm:border-l sm:border-border sm:pl-6 lg:pl-8 py-2">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Spent</p>
           <p className="display-font text-4xl md:text-5xl text-foreground mono-font">
             {formatAmount(monthTotal, 0)}
@@ -74,7 +78,7 @@ export const ExpenseSummary = () => {
           </div>
         </div>
 
-        <div className="md:border-l md:border-border md:pl-8">
+        <div className="lg:border-l lg:border-border lg:pl-8 py-2 border-t sm:border-t-0 border-border pt-6 sm:pt-2">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Remaining</p>
           <div className="flex items-baseline gap-3">
             <p className="text-3xl md:text-4xl font-bold mono-font text-success">
@@ -87,7 +91,7 @@ export const ExpenseSummary = () => {
           </div>
         </div>
 
-        <div className="md:border-l md:border-border md:pl-8">
+        <div className="sm:border-l sm:border-border sm:pl-6 lg:pl-8 py-2 border-t sm:border-t-0 border-border pt-6 sm:pt-2">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Today</p>
           <div className="flex items-baseline gap-3">
             <p className="text-3xl md:text-4xl font-bold mono-font text-destructive">
