@@ -44,7 +44,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     await signOut(auth);
   };
 
-  const username = user?.email?.split('@')[0] || "Guest";
+  const username = user?.displayName || user?.email?.split('@')[0] || "Guest";
 
   return (
     <UserContext.Provider value={{ 
