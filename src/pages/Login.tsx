@@ -18,7 +18,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 md:p-12 relative z-10 bg-[#0a0a0a]">
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-12 relative z-10 bg-transparent">
       <div className="w-full max-w-[1200px] h-auto md:h-[700px] min-h-[600px] bg-black/40 border border-white/10 backdrop-blur-md rounded-sm overflow-hidden flex shadow-elegant">
         
         {/* Left Side: Login Form */}

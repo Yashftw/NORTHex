@@ -15,7 +15,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 export const Layout = () => {
   return (
-    <div className="min-h-screen flex flex-col relative bg-[#0a0a0a] text-foreground">
+    <div className="min-h-screen flex flex-col relative bg-transparent text-foreground">
       
       <SiteNav />
       
