@@ -15,13 +15,18 @@ export const WorkoutHUD = () => {
   const [categoryInput, setCategoryInput] = useState<WorkoutCategory>("Cardio");
   const [isFlashing, setIsFlashing] = useState(false);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const getLocalISODate = (d: Date = new Date()) => {
+    const offset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - offset).toISOString().split('T')[0];
+  };
+
+  const todayStr = getLocalISODate();
   const todayWorkouts = workoutData.filter(w => w.date === todayStr);
 
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().split("T")[0];
+    return getLocalISODate(d);
   });
 
   const weeklyWorkouts = workoutData.filter(w => last7Days.includes(w.date));

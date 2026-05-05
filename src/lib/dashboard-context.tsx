@@ -156,12 +156,12 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       title,
       deadline,
       category,
-      note,
+      note: note || "",
       subTasks: [],
       progress: 0,
       completed: false,
       createdAt: new Date().toISOString(),
-      user_id: user?.uid
+      user_id: user?.uid || ""
     };
     setGoals((prev) => [...prev, newGoal]);
     if (user) await setDoc(doc(db, "goals", newGoal.id), newGoal);
@@ -222,11 +222,11 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       id: crypto.randomUUID(),
       text,
       priority,
-      category,
-      estimatedTime,
+      category: category || "Personal",
+      estimatedTime: estimatedTime || "",
       completed: false,
       createdAt: new Date().toISOString(),
-      user_id: user?.uid
+      user_id: user?.uid || ""
     };
     setTodos((prev) => [...prev, newTodo]);
     if (user) await setDoc(doc(db, "todos", newTodo.id), newTodo);
@@ -260,17 +260,22 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     const sortedDates = [...new Set(workoutData.map(w => w.date))].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     if (sortedDates.length === 0) return 0;
     
-    const todayStr = new Date().toISOString().split("T")[0];
+    const getLocalISODate = (d: Date = new Date()) => {
+      const offset = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - offset).toISOString().split('T')[0];
+    };
+    
+    const todayStr = getLocalISODate();
     let checkDate = new Date();
     
     if (sortedDates[0] !== todayStr) {
       checkDate.setDate(checkDate.getDate() - 1);
-      const yesterdayStr = checkDate.toISOString().split("T")[0];
+      const yesterdayStr = getLocalISODate(checkDate);
       if (sortedDates[0] !== yesterdayStr) return 0;
     }
     
     for (const dStr of sortedDates) {
-      const expectedStr = checkDate.toISOString().split("T")[0];
+      const expectedStr = getLocalISODate(checkDate);
       if (dStr === expectedStr) {
         robustStreak++;
         checkDate.setDate(checkDate.getDate() - 1);

@@ -11,7 +11,13 @@ export const AddExpenseForm = () => {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0].name);
   const [note, setNote] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const getLocalISODate = () => {
+    const d = new Date();
+    const offset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - offset).toISOString().split('T')[0];
+  };
+
+  const [date, setDate] = useState(getLocalISODate());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

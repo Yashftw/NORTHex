@@ -58,8 +58,13 @@ const ExpensesContext = createContext<ExpensesContextValue | null>(null);
 
 const DEFAULT_BUDGETS: Budgets = {};
 
+function getLocalISODate(d: Date = new Date()): string {
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offset).toISOString().split('T')[0];
+}
+
 function getTodayString(): string {
-  return new Date().toISOString().split("T")[0];
+  return getLocalISODate();
 }
 
 function getCurrentMonth(): string {
@@ -179,7 +184,7 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (6 - i));
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = getLocalISODate(d);
       const total = expenses
         .filter((e) => e.date === dateStr)
         .reduce((s, e) => s + e.amount, 0);
