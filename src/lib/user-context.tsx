@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { supabase } from "./supabase";
 
 interface UserContextValue {
   username: string;
@@ -36,17 +37,22 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("north_auth", isAuthenticated.toString());
   }, [isAuthenticated]);
 
-  const setUsername = (name: string) => {
-    setUsernameState(name || "Guest");
+  const setUsername = async (name: string) => {
+    const newName = name || "Guest";
+    setUsernameState(newName);
+    
+    if (import.meta.env.VITE_SUPABASE_URL) {
+      await supabase.from("profiles").upsert({ id: "default_user", username: newName });
+    }
   };
 
-  const login = (name: string) => {
-    setUsername(name);
+  const login = async (name: string) => {
+    await setUsername(name);
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    setUsername("Guest");
+  const logout = async () => {
+    await setUsername("Guest");
     setIsAuthenticated(false);
   };
 

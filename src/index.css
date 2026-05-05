@@ -177,7 +177,62 @@
   position: absolute;
   left: 0;
   top: 50%;
-  height: 2px;
-  background: hsl(var(--muted-foreground));
+  height: 1px;
+  background: #ffffff;
   animation: strikethrough 0.3s ease-out forwards;
 }
+
+/* UI Enhancement Classes */
+@layer utilities {
+  .glow-p1 { border-left: 3px solid #FF4060; box-shadow: -5px 0 15px -5px rgba(255, 64, 96, 0.4); }
+  .glow-p2 { border-left: 3px solid #FF9500; box-shadow: -5px 0 15px -5px rgba(255, 149, 0, 0.4); }
+  .glow-p3 { border-left: 3px solid #9B9B9B; box-shadow: -5px 0 15px -5px rgba(155, 155, 155, 0.4); }
+  .glow-completed { border-left: 3px solid #FFFFFF; box-shadow: -5px 0 15px -5px rgba(255, 255, 255, 0.4); }
+
+  .hover-scanline {
+    position: relative;
+    overflow: hidden;
+  }
+  .hover-scanline::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .hover-scanline:hover::before {
+    opacity: 1;
+    animation: scanline 1.5s linear infinite;
+  }
+
+  .accent-health { border-left: 3px solid #39D353; }
+  .accent-finance { border-left: 3px solid #FFB800; }
+  .accent-personal { border-left: 3px solid #9B9B9B; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+@keyframes blink-once {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.animate-blink-once {
+  animation: blink-once 1s ease-in-out 1;
+}
+
+@keyframes glow-flash {
+  0% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); border-color: rgba(255, 255, 255, 0.1); }
+  50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); border-color: rgba(255, 255, 255, 1); }
+  100% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); border-color: rgba(255, 255, 255, 0.1); }
+}
+.animate-glow-flash {
+  animation: glow-flash 1.5s ease-out;
+}
+

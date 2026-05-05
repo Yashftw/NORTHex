@@ -56,7 +56,7 @@ export const ExpenseList = () => {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="sticky top-[73px] bg-[#121212]/95 backdrop-blur z-10">
+            <thead className="sticky top-0 bg-[#121212]/95 backdrop-blur z-10">
               <tr className="text-xs text-muted-foreground border-b border-white/5">
                 <th className="text-left px-6 md:px-8 py-4 font-normal">Category</th>
                 <th className="text-left px-4 py-4 font-normal">Note</th>

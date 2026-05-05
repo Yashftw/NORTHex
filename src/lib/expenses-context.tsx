@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { supabase } from "./supabase";
 
 export type ExpenseCategory = 
   | "Food" 
@@ -79,6 +80,19 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
     }
   });
 
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      // Only fetch if Supabase URL is configured
+      if (!import.meta.env.VITE_SUPABASE_URL) return;
+      
+      const { data, error } = await supabase.from("expenses").select("*");
+      if (!error && data && data.length > 0) {
+        setExpenses(data);
+      }
+    };
+    fetchExpenses();
+  }, []);
+
   const [budgets, setBudgets] = useState<Budgets>(() => {
     try {
       const saved = localStorage.getItem("north_budgets_v1");
@@ -109,12 +123,21 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("north_income_v1", JSON.stringify(income));
   }, [income]);
 
-  const addExpense = (expense: Omit<Expense, "id">) => {
-    setExpenses((prev) => [{ ...expense, id: crypto.randomUUID() }, ...prev]);
+  const addExpense = async (expense: Omit<Expense, "id">) => {
+    const newExpense = { ...expense, id: crypto.randomUUID() };
+    setExpenses((prev) => [newExpense, ...prev]);
+    
+    if (import.meta.env.VITE_SUPABASE_URL) {
+      await supabase.from("expenses").insert([newExpense]);
+    }
   };
 
-  const removeExpense = (id: string) => {
+  const removeExpense = async (id: string) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
+    
+    if (import.meta.env.VITE_SUPABASE_URL) {
+      await supabase.from("expenses").delete().eq("id", id);
+    }
   };
 
   const setBudget = (category: ExpenseCategory, amount: number) => {

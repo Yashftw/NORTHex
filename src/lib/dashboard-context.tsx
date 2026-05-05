@@ -19,11 +19,19 @@ export interface WorkoutRecordV2 {
 
 export type GoalCategory = "health" | "finance" | "personal";
 
+export interface GoalSubTask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface GoalV2 {
   id: string;
   title: string;
   deadline: string;
   category: GoalCategory;
+  note?: string;
+  subTasks?: GoalSubTask[];
   progress: number; // 0 to 100
   completed: boolean;
   createdAt: string;
@@ -31,10 +39,14 @@ export interface GoalV2 {
 
 export type PriorityLevel = "P1" | "P2" | "P3";
 
+export type TodoCategory = "Work" | "Study" | "Personal" | "Health";
+
 export interface TodoV2 {
   id: string;
   text: string;
   priority: PriorityLevel;
+  category?: TodoCategory;
+  estimatedTime?: string;
   completed: boolean;
   createdAt: string;
   completedAt?: string;
@@ -47,10 +59,12 @@ interface DashboardContextValue {
   todos: TodoV2[];
   addSleep: (date: string, hours: number) => void;
   addWorkout: (date: string, durationMinutes: number, type: WorkoutCategory) => void;
-  addGoal: (title: string, deadline: string, category: GoalCategory) => void;
+  addGoal: (title: string, deadline: string, category: GoalCategory, note?: string) => void;
   incrementGoal: (id: string, amount: number) => void;
+  setGoalProgress: (id: string, progress: number) => void;
+  toggleGoalSubTask: (goalId: string, subTaskId: string) => void;
   deleteGoal: (id: string) => void;
-  addTodo: (text: string, priority: PriorityLevel) => void;
+  addTodo: (text: string, priority: PriorityLevel, category?: TodoCategory, estimatedTime?: string) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
   streak: number;
@@ -130,7 +144,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     ]);
   };
 
-  const addGoal = (title: string, deadline: string, category: GoalCategory) => {
+  const addGoal = (title: string, deadline: string, category: GoalCategory, note?: string) => {
     setGoals((prev) => [
       ...prev,
       {
@@ -138,6 +152,8 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
         title,
         deadline,
         category,
+        note,
+        subTasks: [],
         progress: 0,
         completed: false,
         createdAt: new Date().toISOString(),
@@ -155,17 +171,41 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const setGoalProgress = (id: string, progress: number) => {
+    setGoals((prev) =>
+      prev.map((g) => {
+        if (g.id !== id) return g;
+        const newProgress = Math.min(Math.max(progress, 0), 100);
+        return { ...g, progress: newProgress, completed: newProgress === 100 };
+      })
+    );
+  };
+
+  const toggleGoalSubTask = (goalId: string, subTaskId: string) => {
+    setGoals((prev) =>
+      prev.map((g) => {
+        if (g.id !== goalId) return g;
+        const updatedSubTasks = g.subTasks?.map(st => 
+          st.id === subTaskId ? { ...st, completed: !st.completed } : st
+        ) || [];
+        return { ...g, subTasks: updatedSubTasks };
+      })
+    );
+  };
+
   const deleteGoal = (id: string) => {
     setGoals((prev) => prev.filter((g) => g.id !== id));
   };
 
-  const addTodo = (text: string, priority: PriorityLevel) => {
+  const addTodo = (text: string, priority: PriorityLevel, category?: TodoCategory, estimatedTime?: string) => {
     setTodos((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
         text,
         priority,
+        category,
+        estimatedTime,
         completed: false,
         createdAt: new Date().toISOString(),
       },
@@ -260,6 +300,8 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
         addWorkout,
         addGoal,
         incrementGoal,
+        setGoalProgress,
+        toggleGoalSubTask,
         deleteGoal,
         addTodo,
         toggleTodo,
