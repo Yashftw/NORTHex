@@ -4,7 +4,8 @@ A sleek, dark-mode-native personal tracking dashboard designed to keep your life
 
 🔗 **Live Project:** [https://3am-seven.vercel.app](https://3am-seven.vercel.app)
 
-![3am Dashboard](public/og-image.png)
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/e492287b-0a41-42c5-86c1-b71bf12f41cf" />
+
 
 ## Features
 
