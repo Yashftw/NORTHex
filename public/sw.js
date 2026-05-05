@@ -1,20 +1,11 @@
-const CACHE_NAME = '3am-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/favicon.svg',
-];
+const CACHE_NAME = '3am-v2';
 
-// Install event - cache resources
+// Install event
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-      .then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -29,24 +20,43 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Network First, fallback to cache
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
+  // Don't cache API calls or Firebase auth requests
+  if (
+    event.request.url.includes('firestore.googleapis.com') ||
+    event.request.url.includes('identitytoolkit.googleapis.com') ||
+    event.request.url.includes('securetoken.googleapis.com') ||
+    event.request.url.includes('supabase.co')
+  ) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          const responseToCache = response.clone();
+    fetch(event.request)
+      .then((networkResponse) => {
+        // If we get a good response, cache it
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
-          return response;
-        });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // If network fails, try cache
+        return caches.match(event.request);
       })
   );
+});
+
+// Listen for skip waiting message from client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

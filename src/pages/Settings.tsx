@@ -13,7 +13,7 @@ import { updateProfile } from "firebase/auth";
 import { db } from "@/lib/firebase";
 
 const Settings = () => {
-  const { user, username } = useUser();
+  const { user, username, setUsernameOverride } = useUser();
   const { currency: globalCurrency, setCurrency: setGlobalCurrency } = useCurrency();
   const [name, setName] = useState(username);
   const [email, setEmail] = useState("");
@@ -55,6 +55,25 @@ const Settings = () => {
     { icon: Save, label: "Save Changes", customId: "save-changes" },
   ];
 
+  const handleNotificationToggle = async (type: 'price' | 'weekly', value: boolean) => {
+    if (type === 'price') setPriceAlerts(value);
+    if (type === 'weekly') setWeeklyDigest(value);
+
+    if (value && 'Notification' in window) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        new Notification("Notifications Enabled", {
+          body: `You will now receive ${type === 'price' ? 'price alerts' : 'weekly digests'}.`,
+          icon: "/pillars.png"
+        });
+      } else {
+        toast.error("Notification permission denied by browser.");
+        if (type === 'price') setPriceAlerts(false);
+        if (type === 'weekly') setWeeklyDigest(false);
+      }
+    }
+  };
+
   const save = async () => {
     if (!user) return;
     setIsSaving(true);
@@ -62,6 +81,7 @@ const Settings = () => {
       // Update Firebase Auth Profile
       if (name !== username) {
         await updateProfile(user, { displayName: name });
+        setUsernameOverride(name); // INSTANT UI UPDATE
       }
 
       // Update Firestore Settings
@@ -192,14 +212,14 @@ const Settings = () => {
                     <p className="font-medium">Price alerts</p>
                     <p className="text-sm text-muted-foreground">Notify on big swings (&gt;5%)</p>
                   </div>
-                  <Switch checked={priceAlerts} onCheckedChange={setPriceAlerts} />
+                  <Switch checked={priceAlerts} onCheckedChange={(val) => handleNotificationToggle('price', val)} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Weekly digest</p>
                     <p className="text-sm text-muted-foreground">A summary every Monday morning</p>
                   </div>
-                  <Switch checked={weeklyDigest} onCheckedChange={setWeeklyDigest} />
+                  <Switch checked={weeklyDigest} onCheckedChange={(val) => handleNotificationToggle('weekly', val)} />
                 </div>
               </div>
             </motion.section>
