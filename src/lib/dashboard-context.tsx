@@ -70,6 +70,7 @@ interface DashboardContextValue {
   incrementGoal: (id: string, amount: number) => void;
   setGoalProgress: (id: string, progress: number) => void;
   toggleGoalSubTask: (goalId: string, subTaskId: string) => void;
+  addGoalSubTask: (goalId: string, text: string) => void;
   deleteGoal: (id: string) => void;
   addTodo: (text: string, priority: PriorityLevel, category?: TodoCategory, estimatedTime?: string) => void;
   toggleTodo: (id: string) => void;
@@ -212,6 +213,20 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const addGoalSubTask = (goalId: string, text: string) => {
+    setGoals((prev) => {
+      const next = [...prev];
+      const idx = next.findIndex(g => g.id === goalId);
+      if (idx >= 0) {
+        const newSubTask = { id: crypto.randomUUID(), text, completed: false };
+        const subTasks = next[idx].subTasks ? [...next[idx].subTasks, newSubTask] : [newSubTask];
+        next[idx] = { ...next[idx], subTasks };
+        updateGoalDoc(next[idx]);
+      }
+      return next;
+    });
+  };
+
   const deleteGoal = async (id: string) => {
     setGoals((prev) => prev.filter((g) => g.id !== id));
     if (user) await deleteDoc(doc(db, "goals", id));
@@ -238,12 +253,14 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       const idx = next.findIndex(t => t.id === id);
       if (idx >= 0) {
         const isCompleted = !next[idx].completed;
-        next[idx] = {
-          ...next[idx],
-          completed: isCompleted,
-          completedAt: isCompleted ? new Date().toISOString() : undefined,
-        };
-        if (user) setDoc(doc(db, "todos", next[idx].id), next[idx]);
+        const updatedTodo = { ...next[idx], completed: isCompleted };
+        if (isCompleted) {
+          updatedTodo.completedAt = new Date().toISOString();
+        } else {
+          delete updatedTodo.completedAt;
+        }
+        next[idx] = updatedTodo;
+        if (user) setDoc(doc(db, "todos", updatedTodo.id), updatedTodo);
       }
       return next;
     });
@@ -289,7 +306,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       value={{
         sleepData, workoutData, goals, todos,
         addSleep, addWorkout, addGoal, incrementGoal,
-        setGoalProgress, toggleGoalSubTask, deleteGoal,
+        setGoalProgress, toggleGoalSubTask, addGoalSubTask, deleteGoal,
         addTodo, toggleTodo, deleteTodo, streak,
       }}
     >

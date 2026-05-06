@@ -149,11 +149,21 @@ const CollapsedTasks = ({ onExpand }: { onExpand: () => void }) => {
 };
 
 const ExpandedObjectives = () => {
-  const { goals, addGoal, setGoalProgress, toggleGoalSubTask, deleteGoal } = useDashboard();
+  const { goals, addGoal, setGoalProgress, toggleGoalSubTask, addGoalSubTask, deleteGoal } = useDashboard();
   const [newTitle, setNewTitle] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [newCat, setNewCat] = useState<GoalCategory>("personal");
   const [expandedGoals, setExpandedGoals] = useState<Record<string, boolean>>({});
+  const [addingStepFor, setAddingStepFor] = useState<string | null>(null);
+  const [stepText, setStepText] = useState("");
+
+  const handleAddStep = (goalId: string) => {
+    if (stepText.trim()) {
+      addGoalSubTask(goalId, stepText);
+    }
+    setAddingStepFor(null);
+    setStepText("");
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -277,9 +287,30 @@ const ExpandedObjectives = () => {
                     </div>
                   ))}
                   <div className="pt-2">
-                    <button className="text-[10px] mono-font text-muted-foreground hover:text-white pl-2 transition-colors">
-                      [+ add step]
-                    </button>
+                    {addingStepFor === g.id ? (
+                      <div className="flex items-center gap-2 pl-2">
+                        <input
+                          type="text"
+                          autoFocus
+                          value={stepText}
+                          onChange={e => setStepText(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") handleAddStep(g.id);
+                            if (e.key === "Escape") setAddingStepFor(null);
+                          }}
+                          onBlur={() => handleAddStep(g.id)}
+                          className="bg-transparent text-xs text-white outline-none border-b border-white/20 focus:border-white/50 pb-1 w-full"
+                          placeholder="Step description..."
+                        />
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => { setAddingStepFor(g.id); setStepText(""); }}
+                        className="text-[10px] mono-font text-muted-foreground hover:text-white pl-2 transition-colors"
+                      >
+                        [+ add step]
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

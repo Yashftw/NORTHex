@@ -35,6 +35,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Handle SPA navigation requests
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // If we get a 404 from the server, try to serve index.html
+          if (response.status === 404) {
+            return caches.match('/') || caches.match('/index.html') || response;
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match('/') || caches.match('/index.html');
+        })
+    );
+    return;
+  }
+
+  // Handle other requests
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
